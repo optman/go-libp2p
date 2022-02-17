@@ -233,6 +233,7 @@ func (cfg *Config) NewNode() (host.Host, error) {
 		HolePunchingOptions: cfg.HolePunchingOptions,
 		EnableRelayService:  cfg.EnableRelayService,
 		RelayServiceOpts:    cfg.RelayServiceOpts,
+		CertManager:         cfg.CertManager,
 	})
 	if err != nil {
 		swrm.Close()
@@ -260,9 +261,6 @@ func (cfg *Config) NewNode() (host.Host, error) {
 	if err := h.Network().Listen(cfg.ListenAddrs...); err != nil {
 		h.Close()
 		return nil, err
-	}
-	if cfg.CertManager != nil {
-		cfg.CertManager.AddAddrs(cfg.ListenAddrs)
 	}
 
 	// Configure routing and autorelay

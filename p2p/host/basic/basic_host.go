@@ -33,6 +33,7 @@ import (
 
 	logging "github.com/ipfs/go-log/v2"
 
+	certbot "github.com/marten-seemann/go-libp2p-certbot"
 	ma "github.com/multiformats/go-multiaddr"
 	madns "github.com/multiformats/go-multiaddr-dns"
 	manet "github.com/multiformats/go-multiaddr/net"
@@ -84,6 +85,7 @@ type BasicHost struct {
 	cmgr         connmgr.ConnManager
 	eventbus     event.Bus
 	relayManager *relaysvc.RelayManager
+	certManager  *certbot.CertManager
 
 	AddrsFactory AddrsFactory
 
@@ -153,6 +155,8 @@ type HostOpts struct {
 	EnableHolePunching bool
 	// HolePunchingOptions are options for the hole punching service
 	HolePunchingOptions []holepunch.Option
+
+	CertManager *certbot.CertManager
 }
 
 // NewHost constructs a new *BasicHost and activates it by attaching its stream and connection handlers to the given inet.Network.
@@ -179,6 +183,7 @@ func NewHost(n network.Network, opts *HostOpts) (*BasicHost, error) {
 		ctx:                     hostCtx,
 		ctxCancel:               cancel,
 		disableSignedPeerRecord: opts.DisableSignedPeerRecord,
+		certManager:             opts.CertManager,
 	}
 
 	h.updateLocalIpAddr()
@@ -277,7 +282,8 @@ func NewHost(n network.Network, opts *HostOpts) (*BasicHost, error) {
 
 	// register to be notified when the network's listen addrs change,
 	// so we can update our address set and push events if needed
-	listenHandler := func(network.Network, ma.Multiaddr) {
+	listenHandler := func(_ network.Network, addr ma.Multiaddr) {
+		fmt.Println("listenhandler", addr)
 		h.SignalAddressChange()
 	}
 	n.Notify(&network.NotifyBundle{
@@ -523,6 +529,8 @@ func (h *BasicHost) background() {
 		curr := h.Addrs()
 		emitAddrChange(curr, lastAddrs)
 		lastAddrs = curr
+
+		h.certManager.AddAddrs(curr)
 
 		select {
 		case <-ticker.C:

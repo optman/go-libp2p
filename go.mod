@@ -15,7 +15,6 @@ require (
 	github.com/ipfs/go-datastore v0.5.0
 	github.com/ipfs/go-ipfs-util v0.0.2
 	github.com/ipfs/go-log/v2 v2.5.0
-	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
 	github.com/koron/go-ssdp v0.0.2 // indirect
 	github.com/libp2p/go-buffer-pool v0.0.2
 	github.com/libp2p/go-conn-security-multistream v0.3.0
@@ -41,6 +40,7 @@ require (
 	github.com/libp2p/go-tcp-transport v0.5.0
 	github.com/libp2p/go-ws-transport v0.6.0
 	github.com/libp2p/zeroconf/v2 v2.1.1
+	github.com/marten-seemann/go-libp2p-certbot v0.0.0-20220217071552-85f0da634bf4
 	github.com/multiformats/go-multiaddr v0.5.0
 	github.com/multiformats/go-multiaddr-dns v0.3.1
 	github.com/multiformats/go-multihash v0.0.15

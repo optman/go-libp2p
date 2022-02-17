@@ -32,6 +32,7 @@ import (
 	tptu "github.com/libp2p/go-libp2p-transport-upgrader"
 
 	logging "github.com/ipfs/go-log/v2"
+	certbot "github.com/marten-seemann/go-libp2p-certbot"
 	ma "github.com/multiformats/go-multiaddr"
 	madns "github.com/multiformats/go-multiaddr-dns"
 )
@@ -86,6 +87,7 @@ type Config struct {
 	ListenAddrs     []ma.Multiaddr
 	AddrsFactory    bhost.AddrsFactory
 	ConnectionGater connmgr.ConnectionGater
+	CertManager     *certbot.CertManager
 
 	ConnManager     connmgr.ConnManager
 	ResourceManager network.ResourceManager
@@ -258,6 +260,9 @@ func (cfg *Config) NewNode() (host.Host, error) {
 	if err := h.Network().Listen(cfg.ListenAddrs...); err != nil {
 		h.Close()
 		return nil, err
+	}
+	if cfg.CertManager != nil {
+		cfg.CertManager.AddAddrs(cfg.ListenAddrs)
 	}
 
 	// Configure routing and autorelay

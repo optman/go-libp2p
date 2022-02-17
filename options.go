@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"time"
 
+	certbot "github.com/marten-seemann/go-libp2p-certbot"
+
 	"github.com/libp2p/go-libp2p-core/connmgr"
 	"github.com/libp2p/go-libp2p-core/crypto"
 	"github.com/libp2p/go-libp2p-core/metrics"
@@ -430,6 +432,13 @@ func UserAgent(userAgent string) Option {
 func MultiaddrResolver(rslv *madns.Resolver) Option {
 	return func(cfg *Config) error {
 		cfg.MultiaddrResolver = rslv
+		return nil
+	}
+}
+
+func CertificateManager(m *certbot.CertManager) Option {
+	return func(cfg *Config) error {
+		cfg.CertManager = m
 		return nil
 	}
 }

@@ -186,6 +186,7 @@ func (ar *AutoRelay) background(ctx context.Context) {
 			case network.NotConnected:
 				ar.mx.Lock()
 				if ar.usingRelay(evt.Peer) { // we were disconnected from a relay
+					log.Debugf("relay disconnected %v", evt.Peer)
 					delete(ar.relays, evt.Peer)
 					push = true
 				}
@@ -198,14 +199,7 @@ func (ar *AutoRelay) background(ctx context.Context) {
 			evt := ev.(event.EvtLocalReachabilityChanged)
 
 			if evt.Reachability == network.ReachabilityPrivate {
-				// findRelays is a long-lived task (runs up to 2.5 minutes)
-				// Make sure we only start it once.
-				if atomic.CompareAndSwapInt32(&ar.findRelaysRunning, 0, 1) {
-					go func() {
-						defer atomic.StoreInt32(&ar.findRelaysRunning, 0)
-						ar.findRelays(ctx)
-					}()
-				}
+				go ar.findRelays(ctx)
 			}
 
 			ar.mx.Lock()
@@ -219,6 +213,11 @@ func (ar *AutoRelay) background(ctx context.Context) {
 			push = true
 		case now := <-ticker.C:
 			push = ar.refreshReservations(ctx, now)
+
+			if ar.status == network.ReachabilityPrivate && len(ar.relays) < DesiredRelays {
+				go ar.findRelays(ctx)
+			}
+
 		case <-ctx.Done():
 			return
 		}
@@ -291,6 +290,13 @@ func (ar *AutoRelay) refreshRelayReservation(ctx context.Context, p peer.ID) err
 }
 
 func (ar *AutoRelay) findRelays(ctx context.Context) {
+	// findRelays is a long-lived task (runs up to 2.5 minutes)
+	// Make sure we only start it once.
+	if !atomic.CompareAndSwapInt32(&ar.findRelaysRunning, 0, 1) {
+		return
+	}
+	defer atomic.StoreInt32(&ar.findRelaysRunning, 0)
+
 	timer := time.NewTimer(30 * time.Second)
 	defer timer.Stop()
 	for retry := 0; retry < 5; retry++ {

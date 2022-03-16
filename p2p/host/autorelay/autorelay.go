@@ -297,7 +297,7 @@ func (ar *AutoRelay) findRelays(ctx context.Context) {
 	}
 	defer atomic.StoreInt32(&ar.findRelaysRunning, 0)
 
-	timer := time.NewTimer(30 * time.Second)
+	timer := time.NewTicker(30 * time.Second)
 	defer timer.Stop()
 	for retry := 0; retry < 5; retry++ {
 		if retry > 0 {
